@@ -1,0 +1,57 @@
+version: '3.4'
+
+volumes:
+  data:
+
+services:
+  consul:
+    command: -server -bootstrap -rejoin
+    image: progrium/consul:latest
+    ports:
+      - "8300:8300"
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:53/udp"
+
+  api:
+    command: api --handler=http
+    image: microhq/micro:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - MICRO_REGISTRY_ADDRESS=consul:8500
+    links:
+      - consul
+
+  minio:
+    image: minio/minio
+    volumes:
+      - data:/data
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ACCESS_KEY: XKTWRN4QJNPEM35M2MXR
+      MINIO_SECRET_KEY: gb1AU5YzuOhWgaVRE7jqurezp4bK7tRSdU9EG07Z
+    command: server /data
+
+  storage_srv:
+    build:
+      context: ./storage
+      dockerfile: ./docker/Srv.dockerfile
+    environment:
+      - MICRO_REGISTRY_ADDRESS=consul:8500
+    links:
+      - consul
+    depends_on:
+      - minio
+
+  storage_web:
+    build:
+      context: ./storage
+      dockerfile: ./docker/Web.dockerfile
+    environment:
+      - MICRO_REGISTRY_ADDRESS=consul:8500
+    links:
+      - consul
+
+

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package proto;
+
+service Storage {
+    rpc Save(File) returns (Response) {}
+}
+
+message File {
+    string name = 1;
+    int64 size = 2;
+    string type = 3;
+    bytes content = 4;
+}
+
+message Response {
+    string msg = 1;
+}
